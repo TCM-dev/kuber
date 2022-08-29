@@ -17,6 +17,7 @@
   align-items: center;
   flex: 1;
   transition: 150ms ease-in-out font-size;
+  user-select: none;
 }
 
 .container .timer.pressed {

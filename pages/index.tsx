@@ -4,7 +4,7 @@ import type { NextPage } from "next";
 import { useEffect, useRef, useState } from "react";
 import styles from "../styles/Home.module.css";
 
-var spaceDownedAt: Date | undefined = undefined;
+var pressedAt: Date | undefined = undefined;
 
 const cx = classnames.bind(styles);
 
@@ -66,13 +66,13 @@ const Home: NextPage = () => {
   };
 
   const animatePress = (time: number) => {
-    if (!spaceDownedAt) {
+    if (!pressedAt) {
       return;
     }
 
     const now = new Date();
 
-    const duration = now.getTime() - spaceDownedAt.getTime();
+    const duration = now.getTime() - pressedAt.getTime();
     if (duration > 300) {
       setpressedLongEnough(true);
     }
@@ -96,13 +96,52 @@ const Home: NextPage = () => {
 
     // Init event listeners
     document.body.addEventListener("keydown", handleKeyDown);
+    document.body.addEventListener("touchstart", handleTouchStart);
     document.body.addEventListener("keyup", handleKeyUp);
+    document.body.addEventListener("touchend", handleTouchEnd);
 
     return () => {
       document.body.removeEventListener("keydown", handleKeyDown);
+      document.body.removeEventListener("touchstart", handleTouchStart);
       document.body.removeEventListener("keyup", handleKeyUp);
+      document.body.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);
+
+  const handleTouchStart = (event: TouchEvent) => {
+    event.preventDefault();
+    if (isOngoing()) {
+      stop();
+      return;
+    }
+
+    setpressed(true);
+
+    if (pressedAt) {
+      return;
+    }
+
+    requestAnimationFrame(animatePress);
+
+    pressedAt = new Date();
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    event.preventDefault();
+    const now = new Date();
+
+    if (pressedAt) {
+      setpressed(false);
+      setpressedLongEnough(false);
+      const duration = now.getTime() - pressedAt.getTime();
+
+      if (duration > 300) {
+        start();
+      }
+
+      pressedAt = undefined;
+    }
+  };
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (isOngoing()) {
@@ -121,13 +160,13 @@ const Home: NextPage = () => {
 
     setpressed(true);
 
-    if (spaceDownedAt) {
+    if (pressedAt) {
       return;
     }
 
     requestAnimationFrame(animatePress);
 
-    spaceDownedAt = new Date();
+    pressedAt = new Date();
   };
 
   const handleKeyUp = (event: KeyboardEvent) => {
@@ -137,16 +176,16 @@ const Home: NextPage = () => {
 
     const now = new Date();
 
-    if (spaceDownedAt) {
+    if (pressedAt) {
       setpressed(false);
       setpressedLongEnough(false);
-      const duration = now.getTime() - spaceDownedAt.getTime();
+      const duration = now.getTime() - pressedAt.getTime();
 
       if (duration > 300) {
         start();
       }
 
-      spaceDownedAt = undefined;
+      pressedAt = undefined;
     }
   };
 
